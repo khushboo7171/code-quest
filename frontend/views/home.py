@@ -96,11 +96,10 @@ class HomeView(ttk.Frame):
 
     def _make_stat_card(self, parent, icon, label, value, style):
         card = ttk.Frame(parent, bootstyle=style, padding=16)
-        tk.Label(card, text=icon, font=("Segoe UI Emoji", 22),
-                 bg=card.cget("background") if hasattr(card, 'cget') else "#fff").pack()
-        lbl = ttk.Label(card, text=value, font=("Segoe UI", 18, "bold"))
+        ttk.Label(card, text=icon, font=("Segoe UI Emoji", 22), bootstyle=f"inverse-{style}").pack()
+        lbl = ttk.Label(card, text=value, font=("Segoe UI", 18, "bold"), bootstyle=f"inverse-{style}")
         lbl.pack()
-        ttk.Label(card, text=label, font=("Segoe UI", 9)).pack()
+        ttk.Label(card, text=label, font=("Segoe UI", 9), bootstyle=f"inverse-{style}").pack()
         card._value_label = lbl
         return card
 

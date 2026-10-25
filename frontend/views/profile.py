@@ -48,9 +48,8 @@ class ProfileView(ttk.Frame):
         top = ttk.Frame(self.inner)
         top.pack(fill=X, pady=(0, 20))
 
-        self.avatar_lbl = tk.Label(top, text="🌱",
-                                   font=("Segoe UI Emoji", 52),
-                                   bg=self.inner.cget("background") if hasattr(self.inner, 'cget') else "#fff")
+        self.avatar_lbl = ttk.Label(top, text="🌱",
+                                    font=("Segoe UI Emoji", 52))
         self.avatar_lbl.pack(side=LEFT, padx=(0, 20))
 
         info = ttk.Frame(top)
@@ -89,11 +88,10 @@ class ProfileView(ttk.Frame):
             f = ttk.Frame(stats_row, bootstyle=style, padding=14)
             f.grid(row=0, column=i, padx=6, sticky="nsew")
             stats_row.columnconfigure(i, weight=1)
-            tk.Label(f, text=icon, font=("Segoe UI Emoji", 20),
-                     bg=f.cget("background") if hasattr(f, 'cget') else "#fff").pack()
-            val = ttk.Label(f, text="—", font=("Segoe UI", 18, "bold"))
+            ttk.Label(f, text=icon, font=("Segoe UI Emoji", 20), bootstyle=f"inverse-{style}").pack()
+            val = ttk.Label(f, text="—", font=("Segoe UI", 18, "bold"), bootstyle=f"inverse-{style}")
             val.pack()
-            ttk.Label(f, text=label, font=("Segoe UI", 9)).pack()
+            ttk.Label(f, text=label, font=("Segoe UI", 9), bootstyle=f"inverse-{style}").pack()
             self.stat_widgets[key] = val
 
         ttk.Separator(self.inner).pack(fill=X, pady=12)
@@ -158,7 +156,7 @@ class ProfileView(ttk.Frame):
                 info = BADGES_INFO.get(badge, ("🏅", badge, ""))
                 f = ttk.Frame(self.badges_frame, bootstyle="dark", padding=10)
                 f.grid(row=i // 4, column=i % 4, padx=6, pady=4)
-                tk.Label(f, text=info[0], font=("Segoe UI Emoji", 22)).pack()
+                ttk.Label(f, text=info[0], font=("Segoe UI Emoji", 22)).pack()
                 ttk.Label(f, text=info[1], font=("Segoe UI", 8, "bold")).pack()
 
     def _logout(self):
