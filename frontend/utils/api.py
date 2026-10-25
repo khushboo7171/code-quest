@@ -90,17 +90,32 @@ class APIClient:
     def get_problem(self, problem_id: int) -> dict:
         result = self._get(f"/problems/{problem_id}")
         if result.get("offline") or result.get("error"):
+            # Load from backend/problems/problems.json if available
+            try:
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                json_path = os.path.join(base_dir, "backend", "problems", "problems.json")
+                if os.path.exists(json_path):
+                    with open(json_path, "r", encoding="utf-8") as f:
+                        data = json_lib.load(f)
+                    for item in data:
+                        if item.get("id") == problem_id:
+                            from utils.config import LOCAL_TEST_CASES
+                            item["visible_tests"] = LOCAL_TEST_CASES.get(problem_id, [])
+                            return item
+            except Exception:
+                pass
+
             if problem_id == 1:
                 return SAMPLE_PROBLEM_DETAIL
-            # Generic fallback
             p = next((x for x in SAMPLE_PROBLEMS if x["id"] == problem_id), None)
             if p:
+                from utils.config import LOCAL_TEST_CASES
                 return {**p,
-                        "description": f"Solve problem #{problem_id}.",
+                        "description": f"Solve challenge #{problem_id}: {p['title']}.",
                         "examples": ["Input: ...\nOutput: ..."],
-                        "constraints": ["Check problem statement"],
-                        "hints": ["Think carefully!"],
-                        "visible_tests": []}
+                        "constraints": ["Check constraints in problem description"],
+                        "hints": ["Think of time and space complexity."],
+                        "visible_tests": LOCAL_TEST_CASES.get(problem_id, [])}
         return result
 
     def get_daily(self) -> dict:

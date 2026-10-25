@@ -43,14 +43,11 @@ class ArenaView(ttk.Frame):
                   font=("Segoe UI", 13, "bold"),
                   background="#16213e", foreground="#e94560").pack(side=LEFT, padx=16, pady=8)
 
-        # Language selector
-        ttk.Label(toolbar, text="Language:",
-                  background="#16213e", foreground="#e0e0e0").pack(side=RIGHT, padx=(0, 4), pady=8)
-        lang_cb = ttk.Combobox(toolbar, textvariable=self.language,
-                                values=["python", "cpp", "c"],
-                                state="readonly", width=10, bootstyle="dark")
-        lang_cb.pack(side=RIGHT, padx=8, pady=8)
-        lang_cb.bind("<<ComboboxSelected>>", self._on_lang_change)
+        self.lang_status_lbl = ttk.Label(toolbar, text="Active: 🐍 Python 3",
+                                         font=("Segoe UI", 9, "bold"),
+                                         bootstyle="info",
+                                         background="#16213e")
+        self.lang_status_lbl.pack(side=RIGHT, padx=16, pady=8)
 
         # Main paned window (left: problem, right: editor)
         pane = tk.PanedWindow(self, orient=HORIZONTAL, sashwidth=6,
@@ -102,16 +99,31 @@ class ArenaView(ttk.Frame):
         right_pane.add(editor_frame, minsize=200, height=420)
 
         # Editor toolbar
-        ed_bar = tk.Frame(editor_frame, bg="#252526", height=36)
+        ed_bar = tk.Frame(editor_frame, bg="#252526", height=42)
         ed_bar.pack(fill=X)
         ed_bar.pack_propagate(False)
 
         ttk.Button(ed_bar, text="▶  Run Code", bootstyle="success",
-                   command=self._run_code).pack(side=LEFT, padx=8, pady=4)
+                   command=self._run_code).pack(side=LEFT, padx=8, pady=5)
         ttk.Button(ed_bar, text="🔄 Reset", bootstyle="secondary-outline",
-                   command=self._reset_code).pack(side=LEFT, pady=4)
+                   command=self._reset_code).pack(side=LEFT, pady=5)
         ttk.Button(ed_bar, text="💡 Hint", bootstyle="warning-outline",
-                   command=self._show_hint).pack(side=LEFT, padx=8, pady=4)
+                   command=self._show_hint).pack(side=LEFT, padx=8, pady=5)
+
+        # Prominent Language Selection Bar
+        lang_box = tk.Frame(ed_bar, bg="#252526")
+        lang_box.pack(side=RIGHT, padx=8)
+
+        tk.Label(lang_box, text="Language:", bg="#252526", fg="#aaaaaa",
+                 font=("Segoe UI", 9, "bold")).pack(side=LEFT, padx=(0, 6))
+
+        self.lang_btns = {}
+        for l_key, l_title in [("python", "🐍 Python 3"), ("cpp", "⚡ C++17"), ("c", "🔧 C")]:
+            btn = ttk.Button(lang_box, text=l_title,
+                             bootstyle="info" if l_key == self.language.get() else "secondary-outline",
+                             command=lambda k=l_key: self.set_language(k))
+            btn.pack(side=LEFT, padx=3, pady=5)
+            self.lang_btns[l_key] = btn
 
         self.editor = CodeEditor(editor_frame)
         self.editor.pack(fill=BOTH, expand=True)
@@ -214,8 +226,17 @@ class ArenaView(ttk.Frame):
         else:
             self.prob_text.insert(END, text)
 
-    def _on_lang_change(self, event):
+    def set_language(self, lang: str):
+        self.language.set(lang)
+        self._on_lang_change()
+
+    def _on_lang_change(self, event=None):
         lang = self.language.get()
+        names = {"python": "🐍 Python 3", "cpp": "⚡ C++17", "c": "🔧 C"}
+        if hasattr(self, "lang_status_lbl"):
+            self.lang_status_lbl.config(text=f"Active: {names.get(lang, lang)}")
+        for k, btn in getattr(self, "lang_btns", {}).items():
+            btn.configure(bootstyle="info" if k == lang else "secondary-outline")
         self.editor.set_language(lang)
         if self.current_problem:
             pid = self.current_problem.get("id", 0)
@@ -240,7 +261,137 @@ class ArenaView(ttk.Frame):
 
     def _judge_thread(self, pid, code, lang):
         result = self.api.submit_code(pid, code, lang)
+        # If backend is offline or returned an error, run local judge!
+        if result.get("offline") or result.get("error"):
+            result = self._run_local_judge(pid, code, lang)
         self.after(0, lambda: self._show_result(result))
+
+    def _run_local_judge(self, pid, code, lang):
+        import subprocess, tempfile, os, time, sys
+        from utils.config import LOCAL_TEST_CASES
+
+        tests = []
+        if self.current_problem and self.current_problem.get("visible_tests"):
+            tests = list(self.current_problem.get("visible_tests", []))
+        if not tests:
+            tests = LOCAL_TEST_CASES.get(pid, [])
+        if not tests:
+            tests = [{"input": "", "expected": ""}]
+
+        passed = 0
+        total = len(tests)
+        last_out = ""
+        last_err = ""
+        total_time = 0
+
+        tmp_dir = tempfile.mkdtemp(prefix="codequest_")
+        exe_path = None
+        src_path = None
+
+        try:
+            if lang == "python":
+                src_path = os.path.join(tmp_dir, "solution.py")
+                with open(src_path, "w", encoding="utf-8") as f:
+                    f.write(code)
+                run_cmd = [sys.executable, src_path]
+            else:
+                ext = ".cpp" if lang == "cpp" else ".c"
+                src_path = os.path.join(tmp_dir, f"solution{ext}")
+                exe_path = os.path.join(tmp_dir, "solution.exe")
+                with open(src_path, "w", encoding="utf-8") as f:
+                    f.write(code)
+                
+                std_flag = "-std=c++17" if lang == "cpp" else "-std=c11"
+                compile_cmd = ["g++", std_flag, "-O2", "-o", exe_path, src_path]
+                comp = subprocess.run(compile_cmd, capture_output=True, text=True, timeout=12)
+                if comp.returncode != 0:
+                    return {
+                        "status": "CE",
+                        "passed": 0,
+                        "total": total,
+                        "runtime_ms": 0,
+                        "output": "",
+                        "error": comp.stderr.strip() or "Compilation failed",
+                        "xp_earned": 0,
+                    }
+                run_cmd = [exe_path]
+
+            # Execute against test cases
+            for tc in tests:
+                t_in = tc.get("input", "")
+                t_exp = tc.get("expected", "").strip()
+
+                start = time.perf_counter()
+                try:
+                    proc = subprocess.run(
+                        run_cmd,
+                        input=t_in,
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                except subprocess.TimeoutExpired:
+                    return {
+                        "status": "TLE",
+                        "passed": passed,
+                        "total": total,
+                        "runtime_ms": 5000,
+                        "output": "",
+                        "error": "Time Limit Exceeded (> 5.0 seconds)",
+                        "xp_earned": 0,
+                    }
+
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                total_time += elapsed_ms
+
+                out = proc.stdout.strip()
+                last_out = out
+                last_err = proc.stderr.strip()
+
+                if proc.returncode != 0 and not out:
+                    return {
+                        "status": "RE",
+                        "passed": passed,
+                        "total": total,
+                        "runtime_ms": elapsed_ms,
+                        "output": out,
+                        "error": last_err or f"Runtime error (exit code {proc.returncode})",
+                        "xp_earned": 0,
+                    }
+
+                if out == t_exp:
+                    passed += 1
+
+            status = "AC" if passed == total else "WA"
+            avg_ms = int(total_time / max(total, 1))
+            xp = self.current_problem.get("xp", 10) if status == "AC" else 0
+
+            return {
+                "status": status,
+                "passed": passed,
+                "total": total,
+                "runtime_ms": avg_ms,
+                "output": last_out,
+                "error": last_err,
+                "xp_earned": xp,
+            }
+
+        except Exception as e:
+            return {
+                "status": "ERROR",
+                "passed": 0,
+                "total": total,
+                "runtime_ms": 0,
+                "output": "",
+                "error": str(e),
+                "xp_earned": 0,
+            }
+        finally:
+            try:
+                import shutil
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+            except Exception:
+                pass
 
     def _show_result(self, result: dict):
         if result.get("error") and result.get("offline"):
