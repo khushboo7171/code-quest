@@ -6,46 +6,71 @@ import threading
 
 
 class AuthWindow(tk.Toplevel):
-    """Floating login/register dialog."""
+    """Floating login/register dialog with scroll support."""
 
     def __init__(self, parent, api_client, on_success):
         super().__init__(parent)
         self.api = api_client
         self.on_success = on_success
         self.title("🎮 Code Quest — Login")
-        self.geometry("440x520")
-        self.resizable(False, False)
+        self.geometry("480x620")
+        self.minsize(400, 450)
+        self.resizable(True, True)
         self.configure(bg="#16213e")
         self.grab_set()
         self._build()
 
     def _build(self):
-        # Header
-        tk.Label(self, text="🎮", font=("Segoe UI Emoji", 40),
-                 bg="#16213e", fg="#e94560").pack(pady=(30, 4))
-        tk.Label(self, text="CODE QUEST", font=("Consolas", 18, "bold"),
+        # Create a scrollable frame for the whole dialog
+        canvas = tk.Canvas(self, bg="#16213e", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self, orient=VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side=RIGHT, fill=Y)
+        canvas.pack(side=LEFT, fill=BOTH, expand=True)
+
+        self.scroll_content = tk.Frame(canvas, bg="#16213e")
+        window_id = canvas.create_window((0, 0), window=self.scroll_content, anchor="nw")
+
+        def _on_canvas_configure(e):
+            canvas.itemconfig(window_id, width=e.width)
+        canvas.bind("<Configure>", _on_canvas_configure)
+
+        def _on_frame_configure(e):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+        self.scroll_content.bind("<Configure>", _on_frame_configure)
+
+        # Mouse wheel support
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        self.bind("<MouseWheel>", _on_mousewheel)
+
+        # Header (compact & clean)
+        tk.Label(self.scroll_content, text="🎮", font=("Segoe UI Emoji", 30),
+                 bg="#16213e", fg="#e94560").pack(pady=(16, 2))
+        tk.Label(self.scroll_content, text="CODE QUEST", font=("Consolas", 18, "bold"),
                  bg="#16213e", fg="#e94560").pack()
-        tk.Label(self, text="Programming Practice Playground",
-                 font=("Segoe UI", 9), bg="#16213e", fg="#8888aa").pack(pady=(0, 20))
+        tk.Label(self.scroll_content, text="Programming Practice Playground",
+                 font=("Segoe UI", 9), bg="#16213e", fg="#8888aa").pack(pady=(0, 12))
 
         # Notebook
-        nb = ttk.Notebook(self, bootstyle="dark")
-        nb.pack(fill=BOTH, expand=True, padx=24, pady=0)
+        nb = ttk.Notebook(self.scroll_content, bootstyle="dark")
+        nb.pack(fill=BOTH, expand=True, padx=20, pady=0)
 
         self._build_login_tab(nb)
         self._build_register_tab(nb)
 
         # Status
         self.status_var = tk.StringVar()
-        self.status_lbl = tk.Label(self, textvariable=self.status_var,
+        self.status_lbl = tk.Label(self.scroll_content, textvariable=self.status_var,
                                    font=("Segoe UI", 9), bg="#16213e", fg="#e74c3c")
-        self.status_lbl.pack(pady=6)
+        self.status_lbl.pack(pady=10)
 
     def _make_entry(self, parent, label: str, show: str = "") -> ttk.Entry:
-        tk.Label(parent, text=label, font=("Segoe UI", 10),
-                 bg="#1a1a2e", fg="#e0e0e0", anchor="w").pack(fill=X, pady=(10, 2))
-        e = ttk.Entry(parent, font=("Segoe UI", 11), show=show, bootstyle="dark")
-        e.pack(fill=X, ipady=6)
+        tk.Label(parent, text=label, font=("Segoe UI", 9, "bold"),
+                 bg="#1a1a2e", fg="#e0e0e0", anchor="w").pack(fill=X, pady=(8, 2))
+        e = ttk.Entry(parent, font=("Segoe UI", 10), show=show, bootstyle="dark")
+        e.pack(fill=X, ipady=4)
         return e
 
     def _build_login_tab(self, nb: ttk.Notebook):
@@ -55,12 +80,16 @@ class AuthWindow(tk.Toplevel):
         self.login_user = self._make_entry(f, "Username")
         self.login_pass = self._make_entry(f, "Password", show="●")
 
+        # Allow pressing Enter to submit
+        self.login_pass.bind("<Return>", lambda e: self._do_login())
+        self.login_user.bind("<Return>", lambda e: self._do_login())
+
         ttk.Button(f, text="Login  ▶", bootstyle="danger",
                    command=self._do_login, width=24).pack(pady=14)
 
         ttk.Button(f, text="🎮 Quick Demo (no server)",
                    bootstyle="secondary-outline",
-                   command=self._demo_login, width=24).pack()
+                   command=self._demo_login, width=24).pack(pady=(0, 10))
 
     def _build_register_tab(self, nb: ttk.Notebook):
         f = tk.Frame(nb, bg="#1a1a2e", padx=20, pady=16)
@@ -70,8 +99,14 @@ class AuthWindow(tk.Toplevel):
         self.reg_pass  = self._make_entry(f, "Password", show="●")
         self.reg_pass2 = self._make_entry(f, "Confirm Password", show="●")
 
+        self.reg_pass2.bind("<Return>", lambda e: self._do_register())
+
         ttk.Button(f, text="Create Account  ▶", bootstyle="success",
                    command=self._do_register, width=24).pack(pady=14)
+
+        ttk.Button(f, text="🎮 Quick Demo (no server)",
+                   bootstyle="secondary-outline",
+                   command=self._demo_login, width=24).pack(pady=(0, 10))
 
     def _set_status(self, msg: str, color: str = "#e74c3c"):
         self.status_var.set(msg)
