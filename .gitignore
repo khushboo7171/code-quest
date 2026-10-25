@@ -1,0 +1,61 @@
+# Python (.gitignore)
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.venv/
+venv/
+env/
+ENV/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# C++ build artifacts
+*.o
+*.obj
+*.exe
+*.dll
+*.lib
+*.a
+*.out
+backend/build/
+backend/vcpkg_installed/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Database
+codequest.db
+*.db-shm
+*.db-wal
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Project-specific
+~/.codequest_token
+C:/temp/codequest/
+temp/
+*.log
+
+# Secrets
+.env
+secrets.json
+*.pem
+*.key

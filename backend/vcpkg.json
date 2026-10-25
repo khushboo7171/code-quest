@@ -1,0 +1,9 @@
+{
+  "name": "code-quest-backend",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "crow",
+    "nlohmann-json",
+    "sqlite3"
+  ]
+}

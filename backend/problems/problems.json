@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1, "title": "Two Sum", "difficulty": "easy", "category": "Arrays", "xp": 10,
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers that add up to target.",
+    "examples": [{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "nums[0]+nums[1]=9"}],
+    "constraints": ["2 <= nums.length <= 10^4", "Only one valid answer"],
+    "hints": ["Use a hash map", "Check target-num for each element"],
+    "solution_python": "import sys\ndata=sys.stdin.read().split()\nnums=list(map(int,data[:-1]))\nt=int(data[-1])\nseen={}\nfor i,n in enumerate(nums):\n  c=t-n\n  if c in seen: print(seen[c],i); break\n  seen[n]=i\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){int n,t;vector<int>a;string s;while(getline(cin,s)){istringstream ss(s);int x;while(ss>>x)a.push_back(x);}t=a.back();a.pop_back();unordered_map<int,int>m;for(int i=0;i<a.size();i++){if(m.count(t-a[i])){cout<<m[t-a[i]]<<\" \"<<i;return 0;}m[a[i]]=i;}}\n"
+  },
+  {
+    "id": 2, "title": "Reverse String", "difficulty": "easy", "category": "Strings", "xp": 10,
+    "description": "Reverse a given string and print the result.",
+    "examples": [{"input": "hello", "output": "olleh"}],
+    "constraints": ["1 <= s.length <= 10^5"],
+    "hints": ["Iterate backwards", "Use two pointers"],
+    "solution_python": "import sys\nprint(sys.stdin.read().strip()[::-1])\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){string s;getline(cin,s);reverse(s.begin(),s.end());cout<<s;}\n"
+  },
+  {
+    "id": 3, "title": "FizzBuzz", "difficulty": "easy", "category": "Math", "xp": 10,
+    "description": "For each number 1 to n: print FizzBuzz if divisible by 3 and 5, Fizz if by 3, Buzz if by 5, else the number.",
+    "examples": [{"input": "5", "output": "1\n2\nFizz\n4\nBuzz"}],
+    "constraints": ["1 <= n <= 10^4"],
+    "hints": ["Check 15 first", "Use modulo operator"],
+    "solution_python": "n=int(input())\nfor i in range(1,n+1):\n  if i%15==0:print('FizzBuzz')\n  elif i%3==0:print('Fizz')\n  elif i%5==0:print('Buzz')\n  else:print(i)\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){int n;cin>>n;for(int i=1;i<=n;i++){if(i%15==0)cout<<\"FizzBuzz\";else if(i%3==0)cout<<\"Fizz\";else if(i%5==0)cout<<\"Buzz\";else cout<<i;cout<<\"\\n\";}}\n"
+  },
+  {
+    "id": 4, "title": "Palindrome Check", "difficulty": "easy", "category": "Strings", "xp": 10,
+    "description": "Check if a string is a palindrome (reads same forwards and backwards, ignoring non-alphanumeric).",
+    "examples": [{"input": "racecar", "output": "true"}, {"input": "hello", "output": "false"}],
+    "constraints": ["1 <= s.length <= 2*10^5"],
+    "hints": ["Filter non-alphanumeric", "Compare with reverse"],
+    "solution_python": "import sys\ns=sys.stdin.read().strip()\nc=''.join(x.lower() for x in s if x.isalnum())\nprint('true' if c==c[::-1] else 'false')\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){string s,c;getline(cin,s);for(char ch:s)if(isalnum(ch))c+=tolower(ch);string r=c;reverse(r.begin(),r.end());cout<<(c==r?\"true\":\"false\");}\n"
+  },
+  {
+    "id": 5, "title": "Fibonacci Number", "difficulty": "easy", "category": "Math", "xp": 10,
+    "description": "Return the Nth Fibonacci number. F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2).",
+    "examples": [{"input": "6", "output": "8"}, {"input": "10", "output": "55"}],
+    "constraints": ["0 <= n <= 30"],
+    "hints": ["Use iteration not recursion", "Track two previous values"],
+    "solution_python": "n=int(input())\na,b=0,1\nfor _ in range(n):a,b=b,a+b\nprint(a)\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){int n;cin>>n;long long a=0,b=1;for(int i=0;i<n;i++){long long t=a+b;a=b;b=t;}cout<<a;}\n"
+  },
+  {
+    "id": 6, "title": "Count Vowels", "difficulty": "easy", "category": "Strings", "xp": 10,
+    "description": "Count the number of vowels (a,e,i,o,u) in a string. Case insensitive.",
+    "examples": [{"input": "hello world", "output": "3"}],
+    "constraints": ["1 <= s.length <= 10^5"],
+    "hints": ["Check each character", "Use a set of vowels"],
+    "solution_python": "import sys\ns=sys.stdin.read().strip()\nprint(sum(1 for c in s if c.lower() in 'aeiou'))\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){string s;getline(cin,s);string v=\"aeiouAEIOU\";cout<<count_if(s.begin(),s.end(),[&](char c){return v.find(c)!=string::npos;});}\n"
+  },
+  {
+    "id": 7, "title": "Binary Search", "difficulty": "medium", "category": "Algorithms", "xp": 25,
+    "description": "Implement binary search on a sorted array. Return the index of target or -1 if not found.\n\nLine 1: space-separated sorted integers.\nLine 2: target.",
+    "examples": [{"input": "1 3 5 7 9\n7", "output": "3"}],
+    "constraints": ["Array is sorted ascending", "1 <= n <= 10^4"],
+    "hints": ["Use left and right pointers", "mid = (left+right)//2"],
+    "solution_python": "import sys\nlines=sys.stdin.read().strip().split('\\n')\nnums=list(map(int,lines[0].split()))\nt=int(lines[1])\nl,r=0,len(nums)-1\nres=-1\nwhile l<=r:\n  m=(l+r)//2\n  if nums[m]==t:res=m;break\n  elif nums[m]<t:l=m+1\n  else:r=m-1\nprint(res)\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){vector<int>a;int x;string line;getline(cin,line);istringstream ss(line);while(ss>>x)a.push_back(x);int t;cin>>t;int l=0,r=a.size()-1,res=-1;while(l<=r){int m=(l+r)/2;if(a[m]==t){res=m;break;}else if(a[m]<t)l=m+1;else r=m-1;}cout<<res;}\n"
+  },
+  {
+    "id": 8, "title": "Valid Parentheses", "difficulty": "medium", "category": "Stacks", "xp": 25,
+    "description": "Given a string of brackets, determine if the input is valid. Open brackets must be closed correctly.",
+    "examples": [{"input": "()", "output": "true"}, {"input": "(]", "output": "false"}],
+    "constraints": ["1 <= s.length <= 10^4", "s contains only ()[]{}"],
+    "hints": ["Use a stack", "Push opens, pop on close"],
+    "solution_python": "import sys\ns=sys.stdin.read().strip()\nst=[]\nm={')':'(',']':'[','}':'{'}\nfor c in s:\n  if c in '([{':st.append(c)\n  elif not st or st[-1]!=m[c]:print('false');exit()\n  else:st.pop()\nprint('true' if not st else 'false')\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){string s;getline(cin,s);stack<char>st;for(char c:s){if(c=='('||c=='['||c=='{')st.push(c);else{if(st.empty()||(c==')'&&st.top()!='(')||(c==']'&&st.top()!='[')||(c=='}'&&st.top()!='{')){{cout<<\"false\";return 0;}}st.pop();}}cout<<(st.empty()?\"true\":\"false\");}\n"
+  },
+  {
+    "id": 9, "title": "Anagram Check", "difficulty": "medium", "category": "Strings", "xp": 25,
+    "description": "Given two strings on separate lines, return 'true' if one is an anagram of the other, else 'false'.",
+    "examples": [{"input": "anagram\nnagaram", "output": "true"}, {"input": "rat\ncar", "output": "false"}],
+    "constraints": ["1 <= s.length <= 5*10^4", "lowercase letters only"],
+    "hints": ["Sort both strings", "Or use a frequency count"],
+    "solution_python": "import sys\nlines=sys.stdin.read().strip().split('\\n')\na,b=lines[0],lines[1]\nprint('true' if sorted(a)==sorted(b) else 'false')\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){string a,b;getline(cin,a);getline(cin,b);sort(a.begin(),a.end());sort(b.begin(),b.end());cout<<(a==b?\"true\":\"false\");}\n"
+  },
+  {
+    "id": 10, "title": "Merge Sorted Arrays", "difficulty": "hard", "category": "Arrays", "xp": 50,
+    "description": "Given two sorted arrays on separate lines, merge them into one sorted array and print it.\n\nLine 1: first sorted array (space-separated)\nLine 2: second sorted array (space-separated)",
+    "examples": [{"input": "1 3 5\n2 4 6", "output": "1 2 3 4 5 6"}],
+    "constraints": ["0 <= n,m <= 200", "Both arrays sorted in non-decreasing order"],
+    "hints": ["Use two pointers", "Pick the smaller element at each step"],
+    "solution_python": "import sys\nlines=sys.stdin.read().strip().split('\\n')\na=list(map(int,lines[0].split())) if lines[0].strip() else []\nb=list(map(int,lines[1].split())) if len(lines)>1 and lines[1].strip() else []\nres=[]\ni=j=0\nwhile i<len(a) and j<len(b):\n  if a[i]<=b[j]:res.append(a[i]);i+=1\n  else:res.append(b[j]);j+=1\nres+=a[i:];res+=b[j:]\nprint(*res)\n",
+    "solution_cpp": "#include<bits/stdc++.h>\nusing namespace std;\nint main(){vector<int>a,b;string l1,l2;getline(cin,l1);getline(cin,l2);istringstream s1(l1),s2(l2);int x;while(s1>>x)a.push_back(x);while(s2>>x)b.push_back(x);vector<int>r;merge(a.begin(),a.end(),b.begin(),b.end(),back_inserter(r));for(int i=0;i<r.size();i++){if(i)cout<<' ';cout<<r[i];}}\n"
+  }
+]
